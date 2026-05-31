@@ -1,5 +1,6 @@
 import React, {useState} from 'react';
 import {StyleSheet, Text, View} from 'react-native';
+import {useMutation} from '@tanstack/react-query';
 import {AuthLayout} from '../../../components/Layout/AuthLayout';
 import {BackButton} from '../../../components/IconButton/BackButton';
 import {BangSoalTextField} from '../../../components/TextField/BangSoalTextField';
@@ -8,18 +9,50 @@ import {colors, fonts, fontWeights} from '../../../theme';
 import {isValidEmail} from '../../../utils/validation';
 import {FieldErrors} from '../types';
 import {GoogleAuthButton} from '../components/GoogleAuthButton';
+import {loginEmail} from '../api/authApi';
+import {ApiError} from '../../../lib/api/client';
+import {useAuthStore} from '../../../app/store/authStore';
+import {useToast} from '../../../components/Toast/ToastProvider';
 
-export function SignInScreen({
-  onBack,
-  onSignedIn,
-}: {
-  onBack: () => void;
-  onSignedIn: () => void;
-}) {
+/** Map every login failure to a clear Indonesian message. */
+function loginErrorMessage(err: unknown): string {
+  if (err instanceof ApiError) {
+    // 500 today means the account has no password (Google/phone signup) — newton
+    // calls bcrypt.compare(input, null). Until the backend guard lands, treat it
+    // as the OAuth-account case.
+    if (err.status >= 500) {
+      return 'Akun ini sepertinya terdaftar lewat Google. Coba masuk dengan Google.';
+    }
+    // 401: backend already returns a readable message:
+    // "Email atau password salah!" or "Email belum terdaftar!".
+    return err.message;
+  }
+  // fetch threw (no/blocked network) — not an ApiError.
+  return 'Gagal terhubung ke server. Periksa koneksi internetmu.';
+}
+
+export function SignInScreen({onBack}: {onBack: () => void}) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<FieldErrors>({});
-  const hasError = Object.keys(errors).some(key => errors[key]);
+  // true after a failed login → red field borders (cleared on edit), curie-style.
+  const [loginFailed, setLoginFailed] = useState(false);
+  const hasError = Object.keys(errors).some(key => errors[key]) || loginFailed;
+  const setSession = useAuthStore(state => state.setSession);
+  const toast = useToast();
+
+  // On success, setSession stores the token+user; AppNavigator reacts and
+  // routes by user.onboard_date (onboarding vs home).
+  const loginMutation = useMutation({
+    mutationFn: () => loginEmail(email, password),
+    onSuccess: res => setSession(res.token, res.user),
+    onError: err => {
+      // curie pattern: snackbar + mark fields invalid + clear the password.
+      toast.show({message: loginErrorMessage(err), variant: 'error'});
+      setLoginFailed(true);
+      setPassword('');
+    },
+  });
 
   const submit = () => {
     const nextErrors: FieldErrors = {};
@@ -28,14 +61,15 @@ export function SignInScreen({
     } else if (!isValidEmail(email)) {
       nextErrors.email = 'Email tidak valid';
     }
+    // Login only requires a non-empty password — min-length is a signup rule,
+    // enforcing it here would wrongly block valid existing passwords.
     if (!password) {
       nextErrors.password = 'Password tidak boleh kosong';
-    } else if (password.length < 8) {
-      nextErrors.password = 'Password minimal 8 karakter';
     }
     setErrors(nextErrors);
+    setLoginFailed(false);
     if (Object.keys(nextErrors).length === 0) {
-      onSignedIn();
+      loginMutation.mutate();
     }
   };
 
@@ -54,6 +88,7 @@ export function SignInScreen({
           value={email}
           onChangeText={text => {
             setEmail(text);
+            setLoginFailed(false);
             if (errors.email) setErrors({...errors, email: undefined});
           }}
           keyboardType="email-address"
@@ -66,6 +101,7 @@ export function SignInScreen({
           value={password}
           onChangeText={text => {
             setPassword(text);
+            setLoginFailed(false);
             if (errors.password) setErrors({...errors, password: undefined});
           }}
           secureTextEntry
@@ -75,7 +111,12 @@ export function SignInScreen({
         <View style={styles.forgotWrap}>
           <Text style={styles.forgotText}>Lupa email atau password?</Text>
         </View>
-        <BangSoalButton label="Masuk" variant="white" onPress={submit} />
+        <BangSoalButton
+          label={loginMutation.isPending ? 'Memproses...' : 'Masuk'}
+          variant="white"
+          onPress={submit}
+          disabled={loginMutation.isPending}
+        />
         <View style={styles.authButtonGap} />
         <GoogleAuthButton />
       </View>

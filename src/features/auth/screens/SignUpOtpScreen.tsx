@@ -1,30 +1,43 @@
 import React, {useState} from 'react';
 import {Pressable, StyleSheet, Text, TextInput, View} from 'react-native';
+import {useMutation} from '@tanstack/react-query';
 import {AuthLayout} from '../../../components/Layout/AuthLayout';
 import {BackButton} from '../../../components/IconButton/BackButton';
 import {colors, fonts, fontWeights} from '../../../theme';
+import {sendMailOtp, verifyMail} from '../api/authApi';
+import {ApiError} from '../../../lib/api/client';
+import {useAuthStore} from '../../../app/store/authStore';
 
 export function SignUpOtpScreen({
   email,
   onBack,
-  onVerified,
 }: {
   email: string;
   onBack: () => void;
-  onVerified: () => void;
 }) {
   const [otp, setOtp] = useState('');
   const [cooldown, setCooldown] = useState(0);
+  const [error, setError] = useState<string | undefined>();
+  const setSession = useAuthStore(state => state.setSession);
 
-  const updateOtp = (value: string) => {
-    const numeric = value.replace(/\D/g, '').slice(0, 6);
-    setOtp(numeric);
-    if (numeric.length === 6) {
-      onVerified();
-    }
-  };
+  // On success, setSession stores token + a user whose onboard_date is null →
+  // AppNavigator routes to onboarding.
+  const verifyMutation = useMutation({
+    mutationFn: (code: string) => verifyMail(email, code),
+    onSuccess: res => setSession(res.token, res.user),
+    onError: err => {
+      setOtp('');
+      setError(err instanceof ApiError ? err.message : 'Kode OTP salah.');
+    },
+  });
 
-  const resend = () => {
+  const resendMutation = useMutation({
+    mutationFn: () => sendMailOtp(email),
+    onSuccess: startCooldown,
+    onError: () => setError('Gagal mengirim ulang OTP.'),
+  });
+
+  function startCooldown() {
     setCooldown(10);
     const timer = setInterval(() => {
       setCooldown(current => {
@@ -35,6 +48,20 @@ export function SignUpOtpScreen({
         return current - 1;
       });
     }, 1000);
+  }
+
+  const updateOtp = (value: string) => {
+    const numeric = value.replace(/\D/g, '').slice(0, 6);
+    setOtp(numeric);
+    setError(undefined);
+    if (numeric.length === 6 && !verifyMutation.isPending) {
+      verifyMutation.mutate(numeric);
+    }
+  };
+
+  const resend = () => {
+    setError(undefined);
+    resendMutation.mutate();
   };
 
   return (
@@ -65,9 +92,16 @@ export function SignUpOtpScreen({
             </Pressable>
           ))}
         </View>
+        {verifyMutation.isPending ? (
+          <Text style={styles.statusText}>Memverifikasi...</Text>
+        ) : error ? (
+          <Text style={styles.statusText}>{error}</Text>
+        ) : null}
         <View style={styles.resendRow}>
           <Text style={styles.resendText}>Belum dapat OTP? </Text>
-          <Pressable disabled={cooldown > 0} onPress={resend}>
+          <Pressable
+            disabled={cooldown > 0 || resendMutation.isPending}
+            onPress={resend}>
             <Text style={styles.resendLink}>
               {cooldown > 0
                 ? ` 00:${String(cooldown).padStart(2, '0')}`
@@ -140,6 +174,14 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: fontWeights.semiBold,
     lineHeight: 29,
+  },
+  statusText: {
+    color: colors.white,
+    fontFamily: fonts.quicksand,
+    fontSize: 14,
+    fontWeight: fontWeights.semiBold,
+    marginTop: 18,
+    textAlign: 'center',
   },
   resendRow: {
     alignItems: 'center',

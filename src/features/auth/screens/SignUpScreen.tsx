@@ -1,5 +1,6 @@
 import React, {useState} from 'react';
 import {StyleSheet, Text, View} from 'react-native';
+import {useMutation} from '@tanstack/react-query';
 import {AuthLayout} from '../../../components/Layout/AuthLayout';
 import {BackButton} from '../../../components/IconButton/BackButton';
 import {BangSoalTextField} from '../../../components/TextField/BangSoalTextField';
@@ -7,16 +8,27 @@ import {BangSoalButton} from '../../../components/Button/BangSoalButton';
 import {colors, fonts, fontWeights} from '../../../theme';
 import {isValidEmail} from '../../../utils/validation';
 import {GoogleAuthButton} from '../components/GoogleAuthButton';
+import {sendMailOtp} from '../api/authApi';
+import {ApiError} from '../../../lib/api/client';
 
 export function SignUpScreen({
   onBack,
-  onContinue,
+  onOtpSent,
 }: {
   onBack: () => void;
-  onContinue: (email: string) => void;
+  onOtpSent: (email: string) => void;
 }) {
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | undefined>();
+
+  const otpMutation = useMutation({
+    mutationFn: () => sendMailOtp(email),
+    onSuccess: () => onOtpSent(email),
+    onError: err =>
+      setError(
+        err instanceof ApiError ? err.message : 'Gagal mengirim OTP. Coba lagi.',
+      ),
+  });
 
   const submit = () => {
     if (!email) {
@@ -28,7 +40,7 @@ export function SignUpScreen({
       return;
     }
     setError(undefined);
-    onContinue(email);
+    otpMutation.mutate();
   };
 
   return (
@@ -54,7 +66,12 @@ export function SignUpScreen({
           errorText={error}
         />
         <View style={styles.formSpacing14} />
-        <BangSoalButton label="Lanjut" variant="white" onPress={submit} />
+        <BangSoalButton
+          label={otpMutation.isPending ? 'Mengirim...' : 'Lanjut'}
+          variant="white"
+          onPress={submit}
+          disabled={otpMutation.isPending}
+        />
         <View style={styles.dividerRow}>
           <View style={styles.divider} />
           <Text style={styles.dividerText}>atau</Text>
