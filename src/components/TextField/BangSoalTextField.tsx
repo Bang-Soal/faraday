@@ -14,6 +14,8 @@ export function BangSoalTextField({
   keyboardType,
   errorText,
   isOnError,
+  leadingIcon,
+  trailingIcon,
 }: {
   hintText: string;
   value: string;
@@ -24,39 +26,34 @@ export function BangSoalTextField({
   keyboardType?: KeyboardType;
   errorText?: string;
   isOnError?: boolean;
+  leadingIcon?: React.ReactNode;
+  trailingIcon?: React.ReactNode;
 }) {
+  const invalid = !!(errorText || isOnError);
   return (
     <View>
       {label ? <FieldLabel label={label} required={required} /> : null}
-      <View
-        style={[
-          styles.shell,
-          (errorText || isOnError) && styles.shellError,
-        ]}>
+      <View style={[styles.shell, invalid && styles.shellError]}>
+        {leadingIcon}
         <TextInput
           value={value}
           onChangeText={onChangeText}
           placeholder={hintText}
-          placeholderTextColor="rgba(255, 255, 255, 0.47)"
+          placeholderTextColor="rgba(236, 253, 245, 0.5)"
           secureTextEntry={secureTextEntry}
           keyboardType={keyboardType}
           autoCapitalize="none"
-          cursorColor={colors.white}
+          cursorColor={colors.primary[50]}
           style={styles.input}
         />
+        {trailingIcon}
       </View>
       {errorText ? <Text style={styles.errorText}>{errorText}</Text> : null}
     </View>
   );
 }
 
-function FieldLabel({
-  label,
-  required,
-}: {
-  label: string;
-  required?: boolean;
-}) {
+function FieldLabel({label, required}: {label: string; required?: boolean}) {
   return (
     <View style={styles.labelRow}>
       <Text style={styles.label}>{label}</Text>
@@ -84,27 +81,49 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.bold,
     lineHeight: 19,
   },
+  // Figma "Frame 63": translucent dark-green field — bg rgba(6,78,59,0.3),
+  // inset highlight + inner top shadow, 6px radius, 12px padding, 10px gap, h44.
+  // Array boxShadow form (more reliable than the string parser in RN).
   shell: {
+    alignItems: 'center',
     backgroundColor: 'rgba(6, 78, 59, 0.3)',
-    borderRadius: 12,
-    shadowColor: colors.primary[900],
-    shadowOffset: {width: 0, height: 0},
-    shadowOpacity: 0.15,
-    shadowRadius: 99,
+    borderRadius: 6,
+    boxShadow: [
+      {
+        inset: true,
+        offsetX: 0,
+        offsetY: -2,
+        blurRadius: 0,
+        spreadDistance: -1,
+        color: 'rgba(255, 255, 255, 0.5)',
+      },
+      {
+        inset: true,
+        offsetX: 0,
+        offsetY: 3,
+        blurRadius: 4,
+        spreadDistance: -1,
+        color: 'rgba(6, 78, 59, 0.15)',
+      },
+    ],
+    flexDirection: 'row',
+    gap: 10,
+    minHeight: 44,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
   },
   shellError: {
     borderColor: colors.danger,
     borderWidth: 1,
   },
   input: {
-    color: colors.white,
+    color: colors.primary[50],
+    flex: 1,
     fontFamily: fonts.quicksand,
-    fontSize: 14,
-    fontWeight: fontWeights.bold,
-    lineHeight: 17,
-    minHeight: 50,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    fontSize: 16,
+    fontWeight: fontWeights.semiBold,
+    lineHeight: 20,
+    padding: 0,
   },
   errorText: {
     color: colors.danger,
