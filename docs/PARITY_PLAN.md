@@ -8,6 +8,21 @@
 
 ---
 
+## Goals
+
+1. **Full feature parity with the current websites.** Every feature live in `dijkstra` (auth, dashboard, latihan soal timed + untimed, leaderboard, langganan, bang-catatan, profile, referral) and `lagrange` (the full tryout session) must exist in the app. The websites are the definition of "done" for *what* ships; `curie` is the reference for *how it looks* on mobile. Nothing in the parity matrix stays 🔴.
+
+2. **Keep the app size as low as possible.** Install size is a first-class constraint, not an afterthought — treat it as a budget reviewed every phase. Rules of thumb:
+   - **Add a dependency only when it clearly beats hand-rolling it.** Prefer small, focused libraries; reject anything that pulls a large transitive tree. Check the cost (e.g. bundle-size impact) before adding.
+   - **Avoid duplicate libraries that do the same job** (one date lib, one icon set, one bottom-sheet, etc.).
+   - **Lean on what's already in.** `react-native-svg` is installed → prefer it over new graphics deps; reuse `lucide-react-native` rather than adding another icon pack.
+   - **LaTeX (Phase 2) weighs on this:** the WebView+`mathpix-markdown-it` path bundles a large JS payload; the `react-native-mathjax-html-to-svg` path reuses `react-native-svg`. Weigh size alongside fidelity/perf when choosing.
+   - **Assets:** compress images, ship a single density where possible, avoid bundling fonts/icons that aren't used. Keep large/remote content (question images, etc.) server-fetched, not bundled.
+   - **Native config:** keep Hermes on; enable Android R8/Proguard shrinking + resource shrinking + ABI splits / App Bundle; enable iOS bitcode-free app thinning. Drop unused native modules and locales.
+   - **Track it:** record the APK/IPA size after each phase so regressions are visible; investigate any jump.
+
+---
+
 ## Reference map (Flutter → React Native)
 
 | curie (Flutter) | faraday (React Native) | Notes |
