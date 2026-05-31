@@ -1,6 +1,5 @@
 import React, {useMemo, useState} from 'react';
 import {
-  ImageBackground,
   Modal,
   Pressable,
   ScrollView,
@@ -9,9 +8,8 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import {Check, Search, X} from 'lucide-react-native';
 import {colors, fonts, fontWeights} from '../../theme';
-
-const bottomSheetBackground = require('../../assets/images/bottom-sheet-bg.png');
 
 export function SelectSheet({
   label,
@@ -21,6 +19,7 @@ export function SelectSheet({
   title,
   items,
   onSelect,
+  searchPlaceholder = 'Cari...',
 }: {
   label: string;
   required?: boolean;
@@ -29,6 +28,7 @@ export function SelectSheet({
   title: string;
   items: string[];
   onSelect: (value: string) => void;
+  searchPlaceholder?: string;
 }) {
   const [visible, setVisible] = useState(false);
   const [query, setQuery] = useState('');
@@ -37,6 +37,11 @@ export function SelectSheet({
       items.filter(item => item.toLowerCase().includes(query.toLowerCase())),
     [items, query],
   );
+
+  const close = () => {
+    setQuery('');
+    setVisible(false);
+  };
 
   return (
     <View>
@@ -52,38 +57,59 @@ export function SelectSheet({
         animationType="slide"
         transparent
         visible={visible}
-        onRequestClose={() => setVisible(false)}>
-        <Pressable style={styles.backdrop} onPress={() => setVisible(false)}>
+        onRequestClose={close}>
+        <Pressable style={styles.backdrop} onPress={close}>
           <Pressable style={styles.sheet}>
-            <ImageBackground
-              source={bottomSheetBackground}
-              resizeMode="stretch"
-              style={styles.sheetBackground}>
+            <View style={styles.header}>
               <Text style={styles.sheetTitle}>{title}</Text>
-              <View style={styles.searchShell}>
-                <TextInput
-                  value={query}
-                  onChangeText={setQuery}
-                  placeholder="Cari PTN..."
-                  placeholderTextColor={colors.slate[500]}
-                  style={styles.searchInput}
-                />
-              </View>
-              <ScrollView style={styles.list}>
-                {filteredItems.map(item => (
+              <Pressable
+                accessibilityRole="button"
+                hitSlop={8}
+                onPress={close}
+                style={styles.closeButton}>
+                <X size={20} color={colors.gray[900]} />
+              </Pressable>
+            </View>
+
+            <View style={styles.searchShell}>
+              <Search size={18} color={colors.slate[400]} />
+              <TextInput
+                value={query}
+                onChangeText={setQuery}
+                placeholder={searchPlaceholder}
+                placeholderTextColor={colors.slate[400]}
+                style={styles.searchInput}
+              />
+            </View>
+
+            <ScrollView
+              style={styles.list}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}>
+              {filteredItems.map(item => {
+                const selected = item === value;
+                return (
                   <Pressable
                     key={item}
-                    style={styles.item}
+                    style={[styles.item, selected && styles.itemSelected]}
                     onPress={() => {
                       onSelect(item);
-                      setQuery('');
-                      setVisible(false);
+                      close();
                     }}>
-                    <Text style={styles.itemText}>{item}</Text>
+                    <Text
+                      style={[
+                        styles.itemText,
+                        selected && styles.itemTextSelected,
+                      ]}>
+                      {item}
+                    </Text>
+                    {selected ? (
+                      <Check size={18} color={colors.primary[600]} />
+                    ) : null}
                   </Pressable>
-                ))}
-              </ScrollView>
-            </ImageBackground>
+                );
+              })}
+            </ScrollView>
           </Pressable>
         </Pressable>
       </Modal>
@@ -91,13 +117,7 @@ export function SelectSheet({
   );
 }
 
-function FieldLabel({
-  label,
-  required,
-}: {
-  label: string;
-  required?: boolean;
-}) {
+function FieldLabel({label, required}: {label: string; required?: boolean}) {
   return (
     <View style={styles.labelRow}>
       <Text style={styles.label}>{label}</Text>
@@ -159,52 +179,76 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    height: '50%',
-    overflow: 'hidden',
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    height: '85%',
+    paddingBottom: 16,
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
-  sheetBackground: {
-    flex: 1,
-    paddingBottom: 24,
-    paddingHorizontal: 16,
-    paddingTop: 24,
+  header: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 28,
   },
   sheetTitle: {
-    color: colors.black,
+    color: colors.gray[900],
     fontFamily: fonts.quicksand,
     fontSize: 16,
     fontWeight: fontWeights.bold,
-    lineHeight: 19,
+    lineHeight: 20,
     textAlign: 'center',
   },
+  closeButton: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
   searchShell: {
-    backgroundColor: '#E5E7EB',
-    borderRadius: 8,
-    marginTop: 16,
+    alignItems: 'center',
+    backgroundColor: colors.gray[100],
+    borderRadius: 9999,
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 20,
+    paddingHorizontal: 16,
   },
   searchInput: {
-    color: '#111827',
+    color: colors.gray[900],
+    flex: 1,
     fontFamily: fonts.quicksand,
     fontSize: 14,
     fontWeight: fontWeights.semiBold,
     minHeight: 46,
-    paddingHorizontal: 12,
+    padding: 0,
   },
   list: {
-    marginTop: 12,
+    marginTop: 8,
   },
   item: {
-    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
+    alignItems: 'center',
+    borderBottomColor: colors.gray[100],
     borderBottomWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 8,
-    paddingVertical: 14,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 16,
+  },
+  itemSelected: {
+    backgroundColor: colors.primary[100],
+    borderBottomColor: 'transparent',
+    borderRadius: 12,
   },
   itemText: {
-    color: colors.black,
+    color: colors.gray[900],
     fontFamily: fonts.quicksand,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: fontWeights.semiBold,
-    lineHeight: 17,
+    lineHeight: 19,
+  },
+  itemTextSelected: {
+    color: colors.primary[700],
+    fontWeight: fontWeights.bold,
   },
 });

@@ -42,12 +42,6 @@ export function BangSoalButton({
         disabled && styles.buttonDisabled,
         pressed && !disabled && styles.buttonPressed,
       ]}>
-      {variant === 'white' ? (
-        <>
-          <View style={styles.whiteButtonTopHighlight} />
-          <View style={styles.whiteButtonBottomInset} />
-        </>
-      ) : null}
       {variant === 'secondary' ? (
         <View style={styles.secondaryButtonTopHighlight} />
       ) : null}
@@ -75,16 +69,20 @@ export const buttonTextStyles = StyleSheet.create({
   },
 });
 
+// Figma "Frame 60": drop shadow + inset top highlight + inset bottom shadow.
+// Shared by the white and grayLight variants for the BangSoal "puffy" look.
+const neumorphicShadow = `0px 4px 8px -4px rgba(0, 0, 0, 0.3), inset 0px -4px 4px ${colors.gray[200]}, inset 0px 4px 4px ${colors.white}`;
+
 const styles = StyleSheet.create({
   button: {
     alignItems: 'center',
-    borderRadius: 30,
+    borderRadius: 9999,
     flexDirection: 'row',
-    height: 40,
+    minHeight: 44,
     justifyContent: 'center',
     overflow: 'hidden',
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 12,
     width: '100%',
   },
   buttonPressed: {
@@ -94,27 +92,10 @@ const styles = StyleSheet.create({
     opacity: 0.65,
   },
   whiteButton: {
-    backgroundColor: colors.white,
-    shadowColor: colors.black,
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-  },
-  whiteButtonTopHighlight: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    height: 2,
-    left: 0,
-    position: 'absolute',
-    right: 0,
-    top: 0,
-  },
-  whiteButtonBottomInset: {
-    backgroundColor: 'rgba(107, 114, 128, 0.25)',
-    bottom: 0,
-    height: 2,
-    left: 0,
-    position: 'absolute',
-    right: 0,
+    backgroundColor: colors.gray[50],
+    boxShadow: neumorphicShadow,
+    // override base overflow:hidden so the outer drop shadow isn't clipped
+    overflow: 'visible',
   },
   secondaryButton: {
     backgroundColor: 'rgba(209, 250, 229, 0.4)',
@@ -132,7 +113,9 @@ const styles = StyleSheet.create({
     top: 0,
   },
   grayButton: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.gray[50],
+    boxShadow: neumorphicShadow,
+    overflow: 'visible',
   },
   buttonContentRow: {
     alignItems: 'center',

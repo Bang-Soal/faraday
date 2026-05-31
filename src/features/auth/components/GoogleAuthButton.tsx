@@ -12,7 +12,7 @@ export function GoogleAuthButton() {
     <BangSoalButton variant="white" onPress={showGoogleAuthUnavailable}>
       <View style={styles.content}>
         <Image source={googleLogo} style={styles.logo} />
-        <Text style={buttonTextStyles.primary}>Masuk dengan Google</Text>
+        <Text style={buttonTextStyles.primary}>Gunakan email Google</Text>
       </View>
     </BangSoalButton>
   );
@@ -29,11 +29,11 @@ const styles = StyleSheet.create({
   content: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
     justifyContent: 'center',
   },
   logo: {
-    height: 20,
-    width: 20,
+    height: 16,
+    width: 16,
   },
 });
