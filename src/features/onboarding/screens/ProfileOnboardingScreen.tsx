@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import {useState} from 'react';
 import {Pressable, StyleSheet, Text, View} from 'react-native';
 import {useMutation, useQuery} from '@tanstack/react-query';
 import {AuthLayout} from '../../../components/Layout/AuthLayout';

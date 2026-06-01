@@ -24,10 +24,39 @@ export type User = {
   profile_img?: string | null;
   referral_code?: string | null;
   source?: string | null;
+  validity_date?: string | null;
 };
 
 /** Shape returned by `verify-mail` and `login-email`. */
 export type AuthResponse = {
   token: string;
   user: User;
+};
+
+export type SubscriptionType = 'pemula' | 'setia' | 'ambis';
+
+export type PaymentSnapResponse = {
+  token: string;
+  redirect_url: string;
+};
+
+export type ReferralDetail = {
+  code: string;
+  partner_name: string;
+  discount: number;
+};
+
+export type TransactionOrder = {
+  id: string;
+  subscription_type: SubscriptionType;
+  timestamp: string;
+  referal?: string | null;
+};
+
+export type ProfileResponse = {
+  user: User;
+  package_plan: null | {
+    transactions?: unknown;
+    transaction_orders?: TransactionOrder | null;
+  };
 };

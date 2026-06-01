@@ -1,4 +1,4 @@
-import React from 'react';
+import type {ReactNode} from 'react';
 import {Pressable, StyleSheet, Text, View} from 'react-native';
 import {colors, fonts, fontWeights} from '../../theme';
 
@@ -16,7 +16,7 @@ export function BangSoalButton({
   variant: ButtonVariant;
   onPress?: () => void;
   disabled?: boolean;
-  children?: React.ReactNode;
+  children?: ReactNode;
   trailing?: string;
 }) {
   const buttonStyle =

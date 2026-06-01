@@ -318,7 +318,7 @@ Base: `https://api-dev.bangsoal.co.id/api`
 
 ## Sequencing notes
 - **Phases 0–4** are pure foundation — they unlock everything and have no parity reference to "match," so move through them deliberately but quickly.
-- **Phase 2 (LaTeX) gates 9, 10, 13, 15** — lock it early.
+- **Phase 2 (LaTeX) is deferred to immediately before Phase 9** (its first consumer). Rationale: LaTeX only renders inside question content (latihan/tryout), so there's no reason to add its weight or lock the renderer choice until then — and deferring lets us measure its real app-size impact at integration time (per the size goal). Do the structural phases (navigation, dashboard, profile, etc.) first.
 - **Phases 5–12** mostly *mirror curie 1:1* → fastest parity wins, copy the Flutter UI.
 - **Phases 13–15** have *no curie UI* → design from lagrange/dijkstra web, adapt to mobile; expect these to take the longest.
 - Ship each phase behind its own PR with the "Done when" as the acceptance check.

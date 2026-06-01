@@ -1,5 +1,6 @@
-import React, {
+import {
   createContext,
+  type ReactNode,
   useCallback,
   useContext,
   useRef,
@@ -29,7 +30,7 @@ const VISIBLE_MS = 2400;
  * Floating top toast, modeled on curie's BangSoalSnackbar: slides in from the
  * top, auto-dismisses, one at a time. Use via useToast().show({message, variant}).
  */
-export function ToastProvider({children}: {children: React.ReactNode}) {
+export function ToastProvider({children}: {children: ReactNode}) {
   const insets = useSafeAreaInsets();
   const [toast, setToast] = useState<ToastInput | null>(null);
   const translateY = useRef(new Animated.Value(-140)).current;

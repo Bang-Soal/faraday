@@ -1,4 +1,3 @@
-import React from 'react';
 import {Alert, Image, StyleSheet, Text, View} from 'react-native';
 import {
   BangSoalButton,

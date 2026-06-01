@@ -1,4 +1,4 @@
-import React from 'react';
+import type {ReactNode} from 'react';
 import {StyleSheet, Text, TextInput, View} from 'react-native';
 import {colors, fonts, fontWeights} from '../../theme';
 
@@ -26,8 +26,8 @@ export function BangSoalTextField({
   keyboardType?: KeyboardType;
   errorText?: string;
   isOnError?: boolean;
-  leadingIcon?: React.ReactNode;
-  trailingIcon?: React.ReactNode;
+  leadingIcon?: ReactNode;
+  trailingIcon?: ReactNode;
 }) {
   const invalid = !!(errorText || isOnError);
   return (

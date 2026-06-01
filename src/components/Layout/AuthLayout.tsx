@@ -1,4 +1,4 @@
-import React from 'react';
+import type {ReactNode} from 'react';
 import {
   ImageBackground,
   KeyboardAvoidingView,
@@ -11,7 +11,7 @@ import {colors} from '../../theme';
 
 const meshBackground = require('../../assets/images/bg-mesh-vertical.png');
 
-export function AuthLayout({children}: {children: React.ReactNode}) {
+export function AuthLayout({children}: {children: ReactNode}) {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
