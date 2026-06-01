@@ -1,5 +1,6 @@
-import React, {useState} from 'react';
+import {useState} from 'react';
 import {Pressable, StyleSheet, Text, TextInput, View} from 'react-native';
+import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
 import {useMutation} from '@tanstack/react-query';
 import {AuthLayout} from '../../../components/Layout/AuthLayout';
 import {BackButton} from '../../../components/IconButton/BackButton';
@@ -7,14 +8,11 @@ import {colors, fonts, fontWeights} from '../../../theme';
 import {sendMailOtp, verifyMail} from '../api/authApi';
 import {ApiError} from '../../../lib/api/client';
 import {useAuthStore} from '../../../app/store/authStore';
+import {AuthStackParamList} from '../../../app/navigation/types';
 
-export function SignUpOtpScreen({
-  email,
-  onBack,
-}: {
-  email: string;
-  onBack: () => void;
-}) {
+export function SignUpOtpScreen() {
+  const navigation = useNavigation();
+  const {email} = useRoute<RouteProp<AuthStackParamList, 'Otp'>>().params;
   const [otp, setOtp] = useState('');
   const [cooldown, setCooldown] = useState(0);
   const [error, setError] = useState<string | undefined>();
@@ -67,7 +65,7 @@ export function SignUpOtpScreen({
   return (
     <AuthLayout>
       <View style={styles.top}>
-        <BackButton onPress={onBack} />
+        <BackButton onPress={() => navigation.goBack()} />
         <View style={styles.headingWrap}>
           <Text style={styles.title}>Kami mengirim kode OTP ke Email</Text>
         </View>

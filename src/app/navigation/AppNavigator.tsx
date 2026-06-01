@@ -1,15 +1,32 @@
-import React, {useEffect, useState} from 'react';
+import {useEffect} from 'react';
 import {ActivityIndicator, StyleSheet, View} from 'react-native';
+import {NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {useAuthStore} from '../store/authStore';
 import {colors} from '../../theme';
-import {SignInScreen} from '../../features/auth/screens/SignInScreen';
-import {SignUpScreen} from '../../features/auth/screens/SignUpScreen';
-import {SignUpOtpScreen} from '../../features/auth/screens/SignUpOtpScreen';
-import {OnboardingIntroScreen} from '../../features/onboarding/screens/OnboardingIntroScreen';
+import {AuthStack} from './AuthStack';
+import {MainTabs} from './MainTabs';
 import {ProfileOnboardingScreen} from '../../features/onboarding/screens/ProfileOnboardingScreen';
-import {HomeScreen} from '../../features/home/screens/HomeScreen';
+import {SubscriptionScreen} from '../../features/payment/screens/SubscriptionScreen';
+import {RootStackParamList} from './types';
 
-type AuthScreen = 'intro' | 'signIn' | 'signUp' | 'otp';
+const OnboardingStack = createNativeStackNavigator();
+const RootStack = createNativeStackNavigator<RootStackParamList>();
+
+function OnboardingFlow() {
+  return (
+    <OnboardingStack.Navigator
+      screenOptions={{
+        headerShown: false,
+        contentStyle: {backgroundColor: 'transparent'},
+      }}>
+      <OnboardingStack.Screen
+        name="Onboarding"
+        component={ProfileOnboardingScreen}
+      />
+    </OnboardingStack.Navigator>
+  );
+}
 
 export function AppNavigator() {
   const token = useAuthStore(state => state.token);
@@ -17,14 +34,10 @@ export function AppNavigator() {
   const isHydrated = useAuthStore(state => state.isHydrated);
   const hydrate = useAuthStore(state => state.hydrate);
 
-  const [authScreen, setAuthScreen] = useState<AuthScreen>('intro');
-  const [emailForOtp, setEmailForOtp] = useState('');
-
   useEffect(() => {
     hydrate();
   }, [hydrate]);
 
-  // Avoid a flash of the intro before the persisted session loads.
   if (!isHydrated) {
     return (
       <View style={styles.loading}>
@@ -33,39 +46,24 @@ export function AppNavigator() {
     );
   }
 
-  // Authenticated: route by the backend onboarding flag (take #1).
-  if (token) {
-    return onboardDate ? <HomeScreen /> : <ProfileOnboardingScreen />;
-  }
-
-  // Unauthenticated stack.
-  if (authScreen === 'signIn') {
-    return <SignInScreen onBack={() => setAuthScreen('intro')} />;
-  }
-  if (authScreen === 'signUp') {
-    return (
-      <SignUpScreen
-        onBack={() => setAuthScreen('intro')}
-        onOtpSent={email => {
-          setEmailForOtp(email);
-          setAuthScreen('otp');
-        }}
-      />
-    );
-  }
-  if (authScreen === 'otp') {
-    return (
-      <SignUpOtpScreen
-        email={emailForOtp}
-        onBack={() => setAuthScreen('signUp')}
-      />
-    );
-  }
+  // Auth state decides which navigator mounts (standard RN auth-flow pattern).
   return (
-    <OnboardingIntroScreen
-      onSignIn={() => setAuthScreen('signIn')}
-      onSignUp={() => setAuthScreen('signUp')}
-    />
+    <NavigationContainer>
+      {!token ? (
+        <AuthStack />
+      ) : !onboardDate ? (
+        <OnboardingFlow />
+      ) : (
+        <RootStack.Navigator
+          screenOptions={{
+            headerShown: false,
+            contentStyle: {backgroundColor: 'transparent'},
+          }}>
+          <RootStack.Screen name="Main" component={MainTabs} />
+          <RootStack.Screen name="Langganan" component={SubscriptionScreen} />
+        </RootStack.Navigator>
+      )}
+    </NavigationContainer>
   );
 }
 

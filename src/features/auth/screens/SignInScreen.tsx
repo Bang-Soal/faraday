@@ -1,5 +1,6 @@
-import React, {useState} from 'react';
+import {useState} from 'react';
 import {StyleSheet, Text, View} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
 import {useMutation} from '@tanstack/react-query';
 import {AuthLayout} from '../../../components/Layout/AuthLayout';
 import {BackButton} from '../../../components/IconButton/BackButton';
@@ -31,7 +32,8 @@ function loginErrorMessage(err: unknown): string {
   return 'Gagal terhubung ke server. Periksa koneksi internetmu.';
 }
 
-export function SignInScreen({onBack}: {onBack: () => void}) {
+export function SignInScreen() {
+  const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -76,7 +78,7 @@ export function SignInScreen({onBack}: {onBack: () => void}) {
   return (
     <AuthLayout>
       <View style={styles.headingBlock}>
-        <BackButton onPress={onBack} />
+        <BackButton onPress={() => navigation.goBack()} />
         <View style={styles.headingTextWrap}>
           <Text style={styles.title}>Ayo lanjut latihanmu!</Text>
         </View>

@@ -1,4 +1,3 @@
-import React from 'react';
 import {AppNavigator} from './src/app/navigation/AppNavigator';
 import {AppProviders} from './src/app/providers/AppProviders';
 

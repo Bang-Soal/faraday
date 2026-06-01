@@ -1,5 +1,7 @@
-import React, {useState} from 'react';
+import {useState} from 'react';
 import {StyleSheet, Text, View} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useMutation} from '@tanstack/react-query';
 import {AuthLayout} from '../../../components/Layout/AuthLayout';
 import {BackButton} from '../../../components/IconButton/BackButton';
@@ -10,20 +12,17 @@ import {isValidEmail} from '../../../utils/validation';
 import {GoogleAuthButton} from '../components/GoogleAuthButton';
 import {sendMailOtp} from '../api/authApi';
 import {ApiError} from '../../../lib/api/client';
+import {AuthStackParamList} from '../../../app/navigation/types';
 
-export function SignUpScreen({
-  onBack,
-  onOtpSent,
-}: {
-  onBack: () => void;
-  onOtpSent: (email: string) => void;
-}) {
+export function SignUpScreen() {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | undefined>();
 
   const otpMutation = useMutation({
     mutationFn: () => sendMailOtp(email),
-    onSuccess: () => onOtpSent(email),
+    onSuccess: () => navigation.navigate('Otp', {email}),
     onError: err =>
       setError(
         err instanceof ApiError ? err.message : 'Gagal mengirim OTP. Coba lagi.',
@@ -46,7 +45,7 @@ export function SignUpScreen({
   return (
     <AuthLayout>
       <View style={styles.headingBlock}>
-        <BackButton onPress={onBack} />
+        <BackButton onPress={() => navigation.goBack()} />
         <View style={styles.headingTextWrap}>
           <Text style={styles.title}>
             Mulai latihan UTBK dan UM kamu bersama BangSoal!
